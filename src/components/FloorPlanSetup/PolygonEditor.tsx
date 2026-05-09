@@ -130,7 +130,7 @@ export const PolygonEditor = ({ imageUrl, imageWidth, imageHeight, unit, onConfi
               value={widthInput}
               onChange={(e) => setWidthInput(e.target.value)}
               placeholder={unit === 'cm' ? '例: 360' : '例: 3.6'}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-blue-300" style={{ color: '#111' }}
               autoFocus
             />
           </div>
@@ -141,7 +141,7 @@ export const PolygonEditor = ({ imageUrl, imageWidth, imageHeight, unit, onConfi
               value={depthInput}
               onChange={(e) => setDepthInput(e.target.value)}
               placeholder={unit === 'cm' ? '例: 300' : '例: 3.0'}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-blue-300" style={{ color: '#111' }}
             />
           </div>
         </div>

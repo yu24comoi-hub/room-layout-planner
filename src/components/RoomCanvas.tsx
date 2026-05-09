@@ -155,14 +155,17 @@ export const RoomCanvas = forwardRef<RoomCanvasHandle>((_, ref) => {
     : '';
 
   const getImgStyle = (): React.CSSProperties => {
-    if (!room.floorPlanImage || !room.imageCropW) return { display: 'none' };
-    const scale = (room.width * pxPerCm) / room.imageCropW;
-    const imgX = -(room.imageCropX ?? 0) * scale;
-    const imgY = -(room.imageCropY ?? 0) * scale;
+    if (!room.floorPlanImage || !room.imageCropW || !room.imageCropH) return { display: 'none' };
+    // Width and depth may have been entered independently, so scale x/y separately
+    const sx = (room.width * pxPerCm) / room.imageCropW;
+    const sy = (room.height * pxPerCm) / room.imageCropH;
+    const cropX = room.imageCropX ?? 0;
+    const cropY = room.imageCropY ?? 0;
+    // "scaleX(sx) scaleY(sy) translate(-cropX, -cropY)" applies translate in original px space, then scales
     return {
       position: 'absolute', top: 0, left: 0,
       transformOrigin: '0 0',
-      transform: `translate(${imgX}px,${imgY}px) scale(${scale})`,
+      transform: `scaleX(${sx}) scaleY(${sy}) translate(${-cropX}px, ${-cropY}px)`,
       opacity: 0.35,
       pointerEvents: 'none',
       userSelect: 'none',

@@ -29,6 +29,7 @@ interface AppState {
   room: Room;
   furnitureDefinitions: FurnitureDefinition[];
   placedFurniture: PlacedFurniture[];
+  _pfHistory: PlacedFurniture[][];
 
   toggleUnit: () => void;
   setRoom: (room: Partial<Room>) => void;
@@ -43,7 +44,13 @@ interface AppState {
   rotateFurniture: (id: string) => void;
   removePlacedFurniture: (id: string) => void;
   clearPlacedFurniture: () => void;
+  undo: () => void;
 }
+
+const pushHistory = (current: PlacedFurniture[], history: PlacedFurniture[][]): PlacedFurniture[][] => {
+  const next = [...history, current];
+  return next.length > 50 ? next.slice(next.length - 50) : next;
+};
 
 export const useStore = create<AppState>()(
   persist(
@@ -52,6 +59,7 @@ export const useStore = create<AppState>()(
       room: { width: 450, height: 360 },
       furnitureDefinitions: PRESETS,
       placedFurniture: [],
+      _pfHistory: [],
 
       toggleUnit: () =>
         set((s) => ({ unit: s.unit === 'cm' ? 'm' : 'cm' })),
@@ -73,16 +81,15 @@ export const useStore = create<AppState>()(
             imageCropH: cropH,
           },
           placedFurniture: [],
+          _pfHistory: [],
         }));
       },
 
       clearFloorPlan: () =>
         set((s) => ({
-          room: {
-            width: s.room.width,
-            height: s.room.height,
-          },
+          room: { width: s.room.width, height: s.room.height },
           placedFurniture: [],
+          _pfHistory: [],
         })),
 
       addFurnitureDefinition: (def) =>
@@ -103,26 +110,23 @@ export const useStore = create<AppState>()(
         })),
 
       placeFurniture: (defId, x, y) => {
-        const { room, furnitureDefinitions, placedFurniture } = get();
+        const { room, furnitureDefinitions, placedFurniture, _pfHistory } = get();
         const def = furnitureDefinitions.find((d) => d.id === defId);
         if (!def) return false;
         const snapped = { x: snapToGrid(x), y: snapToGrid(y) };
-        const candidate: PlacedFurniture = {
-          id: uuidv4(),
-          definitionId: defId,
-          x: snapped.x,
-          y: snapped.y,
-          rotated: false,
-        };
+        const candidate: PlacedFurniture = { id: uuidv4(), definitionId: defId, x: snapped.x, y: snapped.y, rotated: false };
         if (!isValidPlacement(candidate, def, room.width, room.height, room.polygon, placedFurniture, furnitureDefinitions)) {
           return false;
         }
-        set((s) => ({ placedFurniture: [...s.placedFurniture, candidate] }));
+        set(() => ({
+          placedFurniture: [...placedFurniture, candidate],
+          _pfHistory: pushHistory(placedFurniture, _pfHistory),
+        }));
         return true;
       },
 
       moveFurniture: (id, x, y) => {
-        const { room, furnitureDefinitions, placedFurniture } = get();
+        const { room, furnitureDefinitions, placedFurniture, _pfHistory } = get();
         const placed = placedFurniture.find((p) => p.id === id);
         if (!placed) return false;
         const def = furnitureDefinitions.find((d) => d.id === placed.definitionId);
@@ -132,16 +136,15 @@ export const useStore = create<AppState>()(
         if (!isValidPlacement(candidate, def, room.width, room.height, room.polygon, placedFurniture, furnitureDefinitions)) {
           return false;
         }
-        set((s) => ({
-          placedFurniture: s.placedFurniture.map((p) =>
-            p.id === id ? { ...p, x: snapped.x, y: snapped.y } : p,
-          ),
+        set(() => ({
+          placedFurniture: placedFurniture.map((p) => p.id === id ? { ...p, x: snapped.x, y: snapped.y } : p),
+          _pfHistory: pushHistory(placedFurniture, _pfHistory),
         }));
         return true;
       },
 
       rotateFurniture: (id) => {
-        const { room, furnitureDefinitions, placedFurniture } = get();
+        const { room, furnitureDefinitions, placedFurniture, _pfHistory } = get();
         const placed = placedFurniture.find((p) => p.id === id);
         if (!placed) return;
         const def = furnitureDefinitions.find((d) => d.id === placed.definitionId);
@@ -150,19 +153,33 @@ export const useStore = create<AppState>()(
         if (!isValidPlacement(candidate, def, room.width, room.height, room.polygon, placedFurniture, furnitureDefinitions)) {
           return;
         }
-        set((s) => ({
-          placedFurniture: s.placedFurniture.map((p) =>
-            p.id === id ? { ...p, rotated: !p.rotated } : p,
-          ),
+        set(() => ({
+          placedFurniture: placedFurniture.map((p) => p.id === id ? { ...p, rotated: !p.rotated } : p),
+          _pfHistory: pushHistory(placedFurniture, _pfHistory),
         }));
       },
 
       removePlacedFurniture: (id) =>
         set((s) => ({
           placedFurniture: s.placedFurniture.filter((p) => p.id !== id),
+          _pfHistory: pushHistory(s.placedFurniture, s._pfHistory),
         })),
 
-      clearPlacedFurniture: () => set({ placedFurniture: [] }),
+      clearPlacedFurniture: () =>
+        set((s) => ({
+          placedFurniture: [],
+          _pfHistory: pushHistory(s.placedFurniture, s._pfHistory),
+        })),
+
+      undo: () =>
+        set((s) => {
+          if (s._pfHistory.length === 0) return s;
+          const prev = s._pfHistory[s._pfHistory.length - 1];
+          return {
+            placedFurniture: prev,
+            _pfHistory: s._pfHistory.slice(0, -1),
+          };
+        }),
     }),
     {
       name: 'room-layout-planner',
@@ -171,6 +188,7 @@ export const useStore = create<AppState>()(
         room: state.room,
         furnitureDefinitions: state.furnitureDefinitions,
         placedFurniture: state.placedFurniture,
+        // _pfHistory is intentionally excluded from persistence
       }),
     },
   ),

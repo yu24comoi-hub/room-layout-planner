@@ -28,67 +28,95 @@ export const AddFurnitureModal = ({ onClose }: Props) => {
     onClose();
   };
 
+  const inputStyle: React.CSSProperties = {
+    width: '100%', background: '#1F1E1B',
+    border: '1px solid #3A3832', borderRadius: 6,
+    padding: '8px 10px', fontSize: 13, color: '#E0D9CA', outline: 'none',
+  };
+
+  const labelStyle: React.CSSProperties = {
+    fontSize: 11, color: '#7A7468', marginBottom: 4, display: 'block',
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="bg-white rounded-xl shadow-xl p-6 w-80">
-        <h3 className="font-semibold text-gray-800 mb-4">家具を追加</h3>
-        <form onSubmit={handleSubmit} className="space-y-3">
+    <div
+      style={{
+        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50,
+      }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div style={{
+        background: '#272520', border: '1px solid #35342F',
+        borderRadius: 14, padding: 24, width: 320,
+      }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, color: '#E0D9CA', margin: '0 0 18px' }}>家具を追加</h3>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>
-            <label className="text-xs text-gray-500 mb-1 block">名前</label>
+            <label style={labelStyle}>名前</label>
             <input
-              type="text"
-              value={name}
+              type="text" value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="例: ローテーブル"
-              className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
-              autoFocus
+              style={inputStyle} autoFocus
             />
           </div>
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <label className="text-xs text-gray-500 mb-1 block">幅 ({unit})</label>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>幅 ({unit})</label>
               <input
-                type="number"
-                value={width}
+                type="number" value={width}
                 onChange={(e) => setWidth(e.target.value)}
                 placeholder={unit === 'cm' ? '80' : '0.8'}
-                className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
-                min={0}
-                step={unit === 'cm' ? 1 : 0.01}
+                style={inputStyle} min={0} step={unit === 'cm' ? 1 : 0.01}
               />
             </div>
-            <div className="flex-1">
-              <label className="text-xs text-gray-500 mb-1 block">奥行 ({unit})</label>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>奥行 ({unit})</label>
               <input
-                type="number"
-                value={height}
+                type="number" value={height}
                 onChange={(e) => setHeight(e.target.value)}
                 placeholder={unit === 'cm' ? '80' : '0.8'}
-                className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
-                min={0}
-                step={unit === 'cm' ? 1 : 0.01}
+                style={inputStyle} min={0} step={unit === 'cm' ? 1 : 0.01}
               />
             </div>
           </div>
           <div>
-            <label className="text-xs text-gray-500 mb-2 block">カラー</label>
-            <div className="flex flex-wrap gap-2">
+            <label style={labelStyle}>カラー</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {COLORS.map((c) => (
                 <button
-                  key={c}
-                  type="button"
+                  key={c} type="button"
                   onClick={() => setColor(c)}
-                  style={{ backgroundColor: c }}
-                  className={`w-7 h-7 rounded-full border-2 transition-all ${color === c ? 'border-gray-600 scale-110' : 'border-transparent'}`}
+                  style={{
+                    width: 24, height: 24, borderRadius: '50%',
+                    backgroundColor: c, border: color === c ? '2px solid #E0D9CA' : '2px solid transparent',
+                    cursor: 'pointer', transition: 'transform 0.1s',
+                    transform: color === c ? 'scale(1.2)' : 'scale(1)',
+                  }}
                 />
               ))}
             </div>
           </div>
-          <div className="flex gap-2 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 border border-gray-200 rounded-lg py-2 text-sm text-gray-600 hover:bg-gray-50">
+          <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+            <button
+              type="button" onClick={onClose}
+              style={{
+                flex: 1, border: '1px solid #35342F', borderRadius: 8,
+                padding: '9px', fontSize: 12, color: '#7A7468',
+                background: 'transparent', cursor: 'pointer',
+              }}
+            >
               キャンセル
             </button>
-            <button type="submit" className="flex-1 bg-blue-500 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-600">
+            <button
+              type="submit"
+              style={{
+                flex: 1, border: 'none', borderRadius: 8,
+                padding: '9px', fontSize: 12, fontWeight: 600,
+                background: '#C8A458', color: '#1B1A17', cursor: 'pointer',
+              }}
+            >
               追加
             </button>
           </div>

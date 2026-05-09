@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import type { Point, Unit } from '../../types';
-import { parseValueToCm, displayValue } from '../../utils/scale';
+import { parseValueToCm } from '../../utils/scale';
 
 interface PixelPoint { x: number; y: number; }
 
@@ -21,6 +21,7 @@ export const PolygonEditor = ({ imageUrl, imageWidth, imageHeight, unit, onConfi
   const [phase, setPhase] = useState<'draw' | 'measure'>('draw');
   const [mouse, setMouse] = useState<PixelPoint | null>(null); // snapped, in original image px
   const [widthInput, setWidthInput] = useState('');
+  const [depthInput, setDepthInput] = useState('');
   const svgRef = useRef<SVGSVGElement>(null);
 
   const displayScale = Math.min(MAX_DISPLAY / imageWidth, MAX_DISPLAY / imageHeight);
@@ -79,25 +80,16 @@ export const PolygonEditor = ({ imageUrl, imageWidth, imageHeight, unit, onConfi
     };
   };
 
-  const computedHeightStr = (): string | null => {
-    if (!widthInput || vertices.length < 3) return null;
-    const w = parseValueToCm(widthInput, unit);
-    if (w <= 0) return null;
-    const bbox = getBBox(vertices);
-    if (bbox.w === 0) return null;
-    const h = w * (bbox.h / bbox.w);
-    return displayValue(Math.round(h), unit);
-  };
-
   const handleConfirmMeasure = () => {
     const roomWidth = parseValueToCm(widthInput || '0', unit);
-    if (roomWidth <= 0) return;
+    const roomHeight = parseValueToCm(depthInput || '0', unit);
+    if (roomWidth <= 0 || roomHeight <= 0) return;
     const bbox = getBBox(vertices);
-    if (bbox.w === 0) return;
-    const roomHeight = roomWidth * (bbox.h / bbox.w);
+    if (bbox.w === 0 || bbox.h === 0) return;
+    // x scales by width, y scales by depth independently
     const polygon: Point[] = vertices.map((v) => ({
       x: (v.x - bbox.minX) * roomWidth / bbox.w,
-      y: (v.y - bbox.minY) * roomWidth / bbox.w,
+      y: (v.y - bbox.minY) * roomHeight / bbox.h,
     }));
     onConfirm(polygon, roomWidth, roomHeight, bbox.minX, bbox.minY, bbox.w, bbox.h);
   };
@@ -108,14 +100,15 @@ export const PolygonEditor = ({ imageUrl, imageWidth, imageHeight, unit, onConfi
   const mouseDisp = mouse ? { x: mouse.x * displayScale, y: mouse.y * displayScale } : null;
 
   if (phase === 'measure') {
-    const heightStr = computedHeightStr();
     const roomWidthCm = parseValueToCm(widthInput || '0', unit);
+    const roomDepthCm = parseValueToCm(depthInput || '0', unit);
+    const canConfirm = roomWidthCm > 0 && roomDepthCm > 0;
     return (
       <div className="flex flex-col h-full p-6 gap-5">
         <div>
-          <h3 className="text-lg font-semibold text-gray-800">部屋の幅を入力</h3>
+          <h3 className="text-lg font-semibold text-gray-800">部屋のサイズを入力</h3>
           <p className="text-sm text-gray-500 mt-1">
-            輪郭の横幅（左右の壁の距離）を入力してください。奥行きは輪郭の縦横比から自動計算されます。
+            実際の部屋の横幅と奥行きを入力してください。
           </p>
         </div>
 
@@ -142,10 +135,14 @@ export const PolygonEditor = ({ imageUrl, imageWidth, imageHeight, unit, onConfi
             />
           </div>
           <div className="flex items-center gap-3">
-            <label className="text-sm text-gray-500 w-24 flex-shrink-0">奥行き ({unit})</label>
-            <div className="border border-gray-100 bg-gray-50 rounded-lg px-3 py-2 text-sm w-36 text-gray-400">
-              {heightStr ?? '—'}（自動）
-            </div>
+            <label className="text-sm text-gray-700 w-24 flex-shrink-0">奥行き ({unit})</label>
+            <input
+              type="number"
+              value={depthInput}
+              onChange={(e) => setDepthInput(e.target.value)}
+              placeholder={unit === 'cm' ? '例: 300' : '例: 3.0'}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            />
           </div>
         </div>
 
@@ -155,7 +152,7 @@ export const PolygonEditor = ({ imageUrl, imageWidth, imageHeight, unit, onConfi
           </button>
           <button
             onClick={handleConfirmMeasure}
-            disabled={roomWidthCm <= 0}
+            disabled={!canConfirm}
             className="ml-auto bg-blue-500 text-white rounded-lg px-5 py-2 text-sm font-medium hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             配置へ進む →

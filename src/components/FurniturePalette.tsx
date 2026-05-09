@@ -12,10 +12,6 @@ export const FurniturePalette = ({ onOpenFloorPlan }: Props) => {
   const [showAdd, setShowAdd] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  const handleDeleteRequest = (id: string) => {
-    setDeleteConfirm(id);
-  };
-
   const handleDeleteConfirm = () => {
     if (deleteConfirm) {
       removeFurnitureDefinition(deleteConfirm);
@@ -26,45 +22,70 @@ export const FurniturePalette = ({ onOpenFloorPlan }: Props) => {
   const defToDelete = furnitureDefinitions.find((d) => d.id === deleteConfirm);
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Floor plan button */}
-      <div className="p-3 border-b border-gray-100">
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+      {/* Section header */}
+      <div style={{ padding: '14px 16px 0' }}>
+        <h2 style={{
+          fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
+          color: '#9A8760', textTransform: 'uppercase', margin: '0 0 10px',
+        }}>
+          Furniture Library
+        </h2>
+
+        {/* Floor plan button */}
         <button
           onClick={onOpenFloorPlan}
-          className="w-full flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 border border-dashed border-gray-200 hover:border-blue-300 rounded-lg p-2.5 transition-colors"
+          style={{
+            width: '100%',
+            display: 'flex', alignItems: 'center', gap: 8,
+            background: room.polygon ? '#1E2820' : '#252420',
+            border: `1px dashed ${room.polygon ? '#3A6050' : '#3A3832'}`,
+            borderRadius: 8, padding: '7px 10px',
+            fontSize: 11, color: room.polygon ? '#6BA87A' : '#7A7468',
+            cursor: 'pointer', marginBottom: 10,
+            transition: 'background 0.12s',
+          }}
         >
-          <span className="text-base">📐</span>
-          <span>
-            {room.polygon ? '間取り図を変更' : '間取り図をアップロード'}
-          </span>
+          <span style={{ fontSize: 14 }}>📐</span>
+          <span>{room.polygon ? '✓ 間取り図が設定済み — 変更する' : '間取り図をアップロード'}</span>
         </button>
-        {room.polygon && (
-          <p className="text-xs text-blue-600 mt-1.5 text-center">✓ 間取り図が設定されています</p>
-        )}
       </div>
 
       {/* Furniture list */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
-        {furnitureDefinitions.length === 0 && (
-          <p className="text-xs text-gray-400 text-center py-4">家具がありません</p>
-        )}
-        {furnitureDefinitions.map((def) => (
-          <FurnitureCard
-            key={def.id}
-            def={def}
-            onDelete={() => handleDeleteRequest(def.id)}
-          />
-        ))}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 10px 10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {furnitureDefinitions.length === 0 && (
+            <p style={{ fontSize: 11, color: '#4A4840', textAlign: 'center', padding: '16px 0' }}>
+              家具がありません
+            </p>
+          )}
+          {furnitureDefinitions.map((def) => (
+            <FurnitureCard
+              key={def.id}
+              def={def}
+              onDelete={() => setDeleteConfirm(def.id)}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Add button */}
-      <div className="p-3 border-t border-gray-100">
+      <div style={{ padding: '10px 10px 12px', borderTop: '1px solid #35342F' }}>
         <button
           onClick={() => setShowAdd(true)}
-          className="w-full flex items-center justify-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg py-2 text-sm font-medium transition-colors"
+          style={{
+            width: '100%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            background: 'transparent', border: '1px solid #35342F',
+            borderRadius: 8, padding: '8px',
+            fontSize: 12, fontWeight: 500, color: '#9A8760',
+            cursor: 'pointer', transition: 'background 0.12s, color 0.12s',
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#272520'; (e.currentTarget as HTMLButtonElement).style.color = '#C8A458'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#9A8760'; }}
         >
-          <span>+</span>
-          <span>家具を追加</span>
+          <span style={{ fontSize: 14 }}>+</span>
+          Add custom furniture
         </button>
       </div>
 
@@ -72,22 +93,36 @@ export const FurniturePalette = ({ onOpenFloorPlan }: Props) => {
 
       {/* Delete confirmation */}
       {deleteConfirm && defToDelete && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-72">
-            <h3 className="font-semibold text-gray-800 mb-2">家具を削除</h3>
-            <p className="text-sm text-gray-600 mb-4">
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50,
+        }}>
+          <div style={{
+            background: '#272520', border: '1px solid #35342F',
+            borderRadius: 12, padding: 24, width: 280,
+          }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600, color: '#E0D9CA', margin: '0 0 8px' }}>家具を削除</h3>
+            <p style={{ fontSize: 12, color: '#7A7468', margin: '0 0 20px', lineHeight: 1.6 }}>
               「{defToDelete.name}」を削除しますか？配置済みの家具も削除されます。
             </p>
-            <div className="flex gap-2">
+            <div style={{ display: 'flex', gap: 8 }}>
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="flex-1 border border-gray-200 rounded-lg py-2 text-sm text-gray-600 hover:bg-gray-50"
+                style={{
+                  flex: 1, border: '1px solid #35342F', borderRadius: 8,
+                  padding: '8px', fontSize: 12, color: '#7A7468',
+                  background: 'transparent', cursor: 'pointer',
+                }}
               >
                 キャンセル
               </button>
               <button
                 onClick={handleDeleteConfirm}
-                className="flex-1 bg-red-500 text-white rounded-lg py-2 text-sm font-medium hover:bg-red-600"
+                style={{
+                  flex: 1, border: 'none', borderRadius: 8,
+                  padding: '8px', fontSize: 12, fontWeight: 600,
+                  background: '#8B2020', color: '#FFD4D4', cursor: 'pointer',
+                }}
               >
                 削除
               </button>

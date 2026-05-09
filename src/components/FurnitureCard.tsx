@@ -2,6 +2,7 @@ import { useDraggable } from '@dnd-kit/core';
 import type { FurnitureDefinition } from '../types';
 import { useStore } from '../store/useStore';
 import { displayValue } from '../utils/scale';
+import { FurnitureIcon } from './FurnitureIcon';
 
 interface Props {
   def: FurnitureDefinition;
@@ -17,34 +18,53 @@ export const FurnitureCard = ({ def, onDelete }: Props) => {
 
   return (
     <div
-      className={`group relative flex items-center gap-2 p-2 rounded-lg border border-gray-100 hover:border-gray-200 bg-white hover:shadow-sm transition-all cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-40' : ''}`}
       ref={setNodeRef}
       {...listeners}
       {...attributes}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        padding: '8px 10px',
+        borderRadius: 8,
+        border: '1px solid #35342F',
+        background: '#272520',
+        cursor: isDragging ? 'grabbing' : 'grab',
+        opacity: isDragging ? 0.4 : 1,
+        transition: 'background 0.12s',
+        userSelect: 'none',
+        position: 'relative',
+      }}
+      onMouseEnter={(e) => !isDragging && ((e.currentTarget as HTMLElement).style.background = '#2E2C28')}
+      onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = '#272520')}
+      className="group"
     >
-      <div
-        className="w-8 h-8 rounded flex-shrink-0 flex items-center justify-center text-xs font-bold text-gray-600"
-        style={{ backgroundColor: def.color }}
-      >
-        {def.name[0]}
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium text-gray-700 truncate">{def.name}</div>
-        <div className="text-xs text-gray-400">
+      <FurnitureIcon defId={def.id} name={def.name} color={def.color} size={36} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 12, fontWeight: 500, color: '#E0D9CA', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {def.name}
+        </div>
+        <div style={{ fontSize: 11, color: '#7A7468', marginTop: 1 }}>
           {displayValue(def.width, unit)} × {displayValue(def.height, unit)}
         </div>
       </div>
       <button
         onPointerDown={(e) => e.stopPropagation()}
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete();
+        onClick={(e) => { e.stopPropagation(); onDelete(); }}
+        style={{
+          width: 20, height: 20, borderRadius: '50%',
+          background: 'transparent', border: 'none',
+          color: '#4A4840', fontSize: 10,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', opacity: 0, transition: 'opacity 0.12s, color 0.12s',
+          flexShrink: 0,
         }}
-        className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded-full bg-gray-100 hover:bg-red-100 hover:text-red-500 flex items-center justify-center text-gray-400 text-xs flex-shrink-0 transition-all"
+        className="delete-btn"
         title="削除"
       >
         ✕
       </button>
+      <style>{`.group:hover .delete-btn { opacity: 1 !important; } .delete-btn:hover { color: #EF4444 !important; }`}</style>
     </div>
   );
 };

@@ -1,22 +1,92 @@
 import { useStore } from '../store/useStore';
 
-export const Header = () => {
+interface Props {
+  onUndo: () => void;
+  onDownload: () => void;
+  canUndo: boolean;
+}
+
+export const Header = ({ onUndo, onDownload, canUndo }: Props) => {
   const { unit, toggleUnit } = useStore();
 
   return (
-    <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shadow-sm flex-shrink-0">
-      <div className="flex items-center gap-2">
-        <span className="text-xl">🏠</span>
-        <h1 className="text-lg font-semibold text-gray-800">Room Layout Planner</h1>
+    <header style={{
+      background: '#1F1E1B',
+      borderBottom: '1px solid #35342F',
+      padding: '0 20px',
+      height: 52,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      flexShrink: 0,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span style={{ fontSize: 20 }}>🏠</span>
+        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#E0D9CA', margin: 0, letterSpacing: '-0.01em' }}>
+          部屋のレイアウトプランナー
+        </h1>
       </div>
-      <button
-        onClick={toggleUnit}
-        className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors"
-      >
-        <span className={unit === 'cm' ? 'text-blue-600 font-bold' : 'text-gray-400'}>cm</span>
-        <span className="text-gray-400 mx-1">|</span>
-        <span className={unit === 'm' ? 'text-blue-600 font-bold' : 'text-gray-400'}>m</span>
-      </button>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {/* Unit toggle */}
+        <button
+          onClick={toggleUnit}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 4,
+            background: '#272520', border: '1px solid #35342F',
+            borderRadius: 8, padding: '5px 12px',
+            fontSize: 12, fontWeight: 500, cursor: 'pointer',
+            color: '#7A7468',
+          }}
+        >
+          <span style={{ color: unit === 'cm' ? '#C8A458' : '#4A4840', fontWeight: unit === 'cm' ? 700 : 400 }}>cm</span>
+          <span style={{ color: '#4A4840', margin: '0 2px' }}>|</span>
+          <span style={{ color: unit === 'm' ? '#C8A458' : '#4A4840', fontWeight: unit === 'm' ? 700 : 400 }}>m</span>
+        </button>
+
+        {/* Undo */}
+        <button
+          onClick={onUndo}
+          disabled={!canUndo}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            background: '#272520', border: '1px solid #35342F',
+            borderRadius: 8, padding: '5px 14px',
+            fontSize: 12, fontWeight: 500, cursor: canUndo ? 'pointer' : 'not-allowed',
+            color: canUndo ? '#E0D9CA' : '#4A4840',
+            transition: 'background 0.15s',
+          }}
+          onMouseEnter={(e) => canUndo && ((e.currentTarget as HTMLButtonElement).style.background = '#2E2C28')}
+          onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = '#272520')}
+        >
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+            <path d="M3 8C3 5.24 5.24 3 8 3c2.21 0 4.1 1.34 4.9 3.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            <path d="M3 4.5V8H6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          Undo
+        </button>
+
+        {/* Download */}
+        <button
+          onClick={onDownload}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            background: '#C8A458', border: 'none',
+            borderRadius: 8, padding: '5px 14px',
+            fontSize: 12, fontWeight: 600, cursor: 'pointer',
+            color: '#1B1A17',
+            transition: 'background 0.15s',
+          }}
+          onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = '#D4B068')}
+          onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = '#C8A458')}
+        >
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+            <path d="M8 2v8M5 7l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M2 12h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          Download
+        </button>
+      </div>
     </header>
   );
 };

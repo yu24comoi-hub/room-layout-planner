@@ -24,7 +24,7 @@ interface ActiveDrag {
 }
 
 export default function App() {
-  const { furnitureDefinitions, placedFurniture, placeFurniture, moveFurniture } = useStore();
+  const { furnitureDefinitions, placedFurniture, placeFurniture, moveFurniture, undo, _pfHistory } = useStore();
   const canvasRef = useRef<RoomCanvasHandle>(null);
   const [activeDrag, setActiveDrag] = useState<ActiveDrag | null>(null);
   const [showFloorPlan, setShowFloorPlan] = useState(false);
@@ -36,7 +36,6 @@ export default function App() {
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const data = event.active.data.current;
     if (!data) return;
-
     if (data.type === 'palette') {
       const def = furnitureDefinitions.find((d) => d.id === data.defId);
       if (def) setActiveDrag({ type: 'palette', def });
@@ -73,10 +72,8 @@ export default function App() {
       if (!def) return;
       const canvasRect = handle.getCanvasRect();
       if (!canvasRect) return;
-
       const translatedRect = active.rect.current.translated;
       if (!translatedRect) return;
-
       const centerX = translatedRect.left + translatedRect.width / 2 - canvasRect.left;
       const centerY = translatedRect.top + translatedRect.height / 2 - canvasRect.top;
       const x = snapToGrid(centerX / pxPerCm - def.width / 2);
@@ -96,15 +93,24 @@ export default function App() {
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', overflow: 'hidden' }}>
-        <Header />
+        <Header
+          onUndo={undo}
+          onDownload={() => canvasRef.current?.exportPng()}
+          canUndo={_pfHistory.length > 0}
+        />
         <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
           {/* Left sidebar */}
-          <aside style={{ width: 256, flexShrink: 0, background: 'white', borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <aside style={{
+            width: 260, flexShrink: 0,
+            background: '#1F1E1B',
+            borderRight: '1px solid #35342F',
+            display: 'flex', flexDirection: 'column', overflow: 'hidden',
+          }}>
             <RoomConfig />
             <FurniturePalette onOpenFloorPlan={() => setShowFloorPlan(true)} />
           </aside>
 
-          {/* Main canvas area */}
+          {/* Main canvas */}
           <main style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
             <RoomCanvas ref={canvasRef} />
           </main>
@@ -114,23 +120,17 @@ export default function App() {
       {/* Drag ghost */}
       <DragOverlay dropAnimation={null}>
         {activeDrag && (
-          <div
-            style={{
-              width: Math.max(overlayW, 40),
-              height: Math.max(overlayH, 30),
-              backgroundColor: activeDrag.def.color,
-              borderRadius: 4,
-              border: '1.5px solid rgba(0,0,0,0.15)',
-              opacity: 0.85,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 11,
-              fontWeight: 500,
-              color: '#374151',
-              pointerEvents: 'none',
-            }}
-          >
+          <div style={{
+            width: Math.max(overlayW, 40),
+            height: Math.max(overlayH, 30),
+            backgroundColor: activeDrag.def.color,
+            borderRadius: 4,
+            border: '1.5px solid rgba(0,0,0,0.2)',
+            opacity: 0.85,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 11, fontWeight: 600, color: 'rgba(0,0,0,0.55)',
+            pointerEvents: 'none',
+          }}>
             {activeDrag.def.name}
           </div>
         )}

@@ -10,10 +10,11 @@ export interface Room {
   height: number; // cm
   polygon?: Point[];        // polygon vertices in cm (relative to room top-left)
   floorPlanImage?: string;  // base64 data URL
-  imageScale?: number;      // px/cm in original image (from calibration)
-  // polygon bounding box offset from original image (in cm)
-  polygonOffsetX?: number;
-  polygonOffsetY?: number;
+  // crop region in original image pixels (bounding box of the traced polygon)
+  imageCropX?: number;
+  imageCropY?: number;
+  imageCropW?: number;
+  imageCropH?: number;
 }
 
 export interface FurnitureDefinition {

@@ -71,17 +71,18 @@ export const RoomCanvas = forwardRef<RoomCanvasHandle>((_, ref) => {
   // Floor plan image transform: shift & scale original image so that
   // the polygon bounding box aligns with the canvas area
   const getImgStyle = (): React.CSSProperties => {
-    if (!room.floorPlanImage || !room.imageScale) return { display: 'none' };
-    const imgScale = pxPerCm / room.imageScale;
-    const offsetX = -(room.polygonOffsetX ?? 0) * pxPerCm;
-    const offsetY = -(room.polygonOffsetY ?? 0) * pxPerCm;
+    if (!room.floorPlanImage || !room.imageCropW) return { display: 'none' };
+    // Scale original image so that the crop width matches the canvas width in pixels
+    const scale = (room.width * pxPerCm) / room.imageCropW;
+    const imgX = -(room.imageCropX ?? 0) * scale;
+    const imgY = -(room.imageCropY ?? 0) * scale;
     return {
       position: 'absolute',
       top: 0,
       left: 0,
       transformOrigin: '0 0',
-      transform: `translate(${offsetX}px,${offsetY}px) scale(${imgScale})`,
-      opacity: 0.4,
+      transform: `translate(${imgX}px,${imgY}px) scale(${scale})`,
+      opacity: 0.5,
       pointerEvents: 'none',
       userSelect: 'none',
     };

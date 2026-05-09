@@ -32,7 +32,7 @@ interface AppState {
 
   toggleUnit: () => void;
   setRoom: (room: Partial<Room>) => void;
-  setFloorPlan: (imageUrl: string, imageScale: number, polygon: Point[], offsetX: number, offsetY: number) => void;
+  setFloorPlan: (imageUrl: string, polygon: Point[], roomWidth: number, roomHeight: number, cropX: number, cropY: number, cropW: number, cropH: number) => void;
   clearFloorPlan: () => void;
 
   addFurnitureDefinition: (def: Omit<FurnitureDefinition, 'id'>) => void;
@@ -59,25 +59,18 @@ export const useStore = create<AppState>()(
       setRoom: (partial) =>
         set((s) => ({ room: { ...s.room, ...partial } })),
 
-      setFloorPlan: (imageUrl, imageScale, polygon, offsetX, offsetY) => {
-        const xs = polygon.map((p) => p.x);
-        const ys = polygon.map((p) => p.y);
-        const width = Math.max(...xs) - Math.min(...xs);
-        const height = Math.max(...ys) - Math.min(...ys);
-        // Shift polygon so bounding box starts at (0,0)
-        const minX = Math.min(...xs);
-        const minY = Math.min(...ys);
-        const normalized = polygon.map((p) => ({ x: p.x - minX, y: p.y - minY }));
+      setFloorPlan: (imageUrl, polygon, roomWidth, roomHeight, cropX, cropY, cropW, cropH) => {
         set((s) => ({
           room: {
             ...s.room,
-            width: Math.round(width),
-            height: Math.round(height),
-            polygon: normalized,
+            width: Math.round(roomWidth),
+            height: Math.round(roomHeight),
+            polygon,
             floorPlanImage: imageUrl,
-            imageScale,
-            polygonOffsetX: offsetX + minX,
-            polygonOffsetY: offsetY + minY,
+            imageCropX: cropX,
+            imageCropY: cropY,
+            imageCropW: cropW,
+            imageCropH: cropH,
           },
           placedFurniture: [],
         }));

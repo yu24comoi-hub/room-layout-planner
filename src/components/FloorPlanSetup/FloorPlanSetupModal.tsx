@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { useStore } from '../../store/useStore';
 import { ImageUploader } from './ImageUploader';
-import { ScaleCalibrator } from './ScaleCalibrator';
 import { PolygonEditor } from './PolygonEditor';
 import type { Point } from '../../types';
 
-type Step = 'upload' | 'calibrate' | 'polygon';
+type Step = 'upload' | 'polygon';
 
 interface Props {
   onClose: () => void;
@@ -17,22 +16,24 @@ export const FloorPlanSetupModal = ({ onClose }: Props) => {
   const [imageUrl, setImageUrl] = useState('');
   const [imageWidth, setImageWidth] = useState(0);
   const [imageHeight, setImageHeight] = useState(0);
-  const [imageScale, setImageScale] = useState(1); // px/cm
 
   const handleImageLoaded = (url: string, w: number, h: number) => {
     setImageUrl(url);
     setImageWidth(w);
     setImageHeight(h);
-    setStep('calibrate');
-  };
-
-  const handleCalibrated = (scale: number) => {
-    setImageScale(scale);
     setStep('polygon');
   };
 
-  const handlePolygonConfirm = (polygon: Point[], offsetX: number, offsetY: number) => {
-    setFloorPlan(imageUrl, imageScale, polygon, offsetX, offsetY);
+  const handlePolygonConfirm = (
+    polygon: Point[],
+    roomWidth: number,
+    roomHeight: number,
+    cropX: number,
+    cropY: number,
+    cropW: number,
+    cropH: number,
+  ) => {
+    setFloorPlan(imageUrl, polygon, roomWidth, roomHeight, cropX, cropY, cropW, cropH);
     onClose();
   };
 
@@ -43,8 +44,7 @@ export const FloorPlanSetupModal = ({ onClose }: Props) => {
 
   const stepLabels: Record<Step, string> = {
     upload: '① 画像アップロード',
-    calibrate: '② スケール設定',
-    polygon: '③ 輪郭トレース',
+    polygon: '② 輪郭トレース',
   };
 
   return (
@@ -55,12 +55,12 @@ export const FloorPlanSetupModal = ({ onClose }: Props) => {
           <div className="flex items-center gap-3">
             <h2 className="font-semibold text-gray-800">間取り図の設定</h2>
             <div className="flex gap-1">
-              {(['upload', 'calibrate', 'polygon'] as Step[]).map((s, i) => (
+              {(['upload', 'polygon'] as Step[]).map((s, i) => (
                 <div key={s} className="flex items-center gap-1">
                   <div className={`text-xs px-2 py-0.5 rounded-full ${step === s ? 'bg-blue-100 text-blue-700 font-medium' : 'text-gray-400'}`}>
                     {stepLabels[s]}
                   </div>
-                  {i < 2 && <span className="text-gray-300 text-xs">›</span>}
+                  {i < 1 && <span className="text-gray-300 text-xs">›</span>}
                 </div>
               ))}
             </div>
@@ -86,24 +86,14 @@ export const FloorPlanSetupModal = ({ onClose }: Props) => {
           {step === 'upload' && (
             <ImageUploader onImageLoaded={handleImageLoaded} />
           )}
-          {step === 'calibrate' && (
-            <ScaleCalibrator
-              imageUrl={imageUrl}
-              imageWidth={imageWidth}
-              imageHeight={imageHeight}
-              unit={unit}
-              onCalibrated={handleCalibrated}
-              onBack={() => setStep('upload')}
-            />
-          )}
           {step === 'polygon' && (
             <PolygonEditor
               imageUrl={imageUrl}
               imageWidth={imageWidth}
               imageHeight={imageHeight}
-              imageScale={imageScale}
+              unit={unit}
               onConfirm={handlePolygonConfirm}
-              onBack={() => setStep('calibrate')}
+              onBack={() => setStep('upload')}
             />
           )}
         </div>

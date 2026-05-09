@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
-import { parseValueToCm } from '../utils/scale';
+import { parseValueToCm, formatValue } from '../utils/scale';
+import type { FurnitureDefinition } from '../types';
 
 interface Props {
   onClose: () => void;
+  editTarget?: FurnitureDefinition; // set when editing an existing definition
 }
 
 const COLORS = [
@@ -12,19 +14,25 @@ const COLORS = [
   '#d9f99d', '#fed7aa', '#c4b5fd', '#f0abfc',
 ];
 
-export const AddFurnitureModal = ({ onClose }: Props) => {
-  const { unit, addFurnitureDefinition } = useStore();
-  const [name, setName] = useState('');
-  const [width, setWidth] = useState('');
-  const [height, setHeight] = useState('');
-  const [color, setColor] = useState(COLORS[0]);
+export const AddFurnitureModal = ({ onClose, editTarget }: Props) => {
+  const { unit, addFurnitureDefinition, updateFurnitureDefinition } = useStore();
+  const isEdit = !!editTarget;
+
+  const [name, setName] = useState(editTarget?.name ?? '');
+  const [width, setWidth] = useState(editTarget ? formatValue(editTarget.width, unit) : '');
+  const [height, setHeight] = useState(editTarget ? formatValue(editTarget.height, unit) : '');
+  const [color, setColor] = useState(editTarget?.color ?? COLORS[0]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const w = parseValueToCm(width, unit);
     const h = parseValueToCm(height, unit);
     if (!name.trim() || w <= 0 || h <= 0) return;
-    addFurnitureDefinition({ name: name.trim(), width: w, height: h, color, isPreset: false });
+    if (isEdit && editTarget) {
+      updateFurnitureDefinition(editTarget.id, { name: name.trim(), width: w, height: h, color });
+    } else {
+      addFurnitureDefinition({ name: name.trim(), width: w, height: h, color, isPreset: false });
+    }
     onClose();
   };
 
@@ -50,7 +58,9 @@ export const AddFurnitureModal = ({ onClose }: Props) => {
         background: '#272520', border: '1px solid #35342F',
         borderRadius: 14, padding: 24, width: 320,
       }}>
-        <h3 style={{ fontSize: 14, fontWeight: 600, color: '#E0D9CA', margin: '0 0 18px' }}>家具を追加</h3>
+        <h3 style={{ fontSize: 14, fontWeight: 600, color: '#E0D9CA', margin: '0 0 18px' }}>
+          {isEdit ? '家具を編集' : '家具を追加'}
+        </h3>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>
             <label style={labelStyle}>名前</label>
@@ -117,7 +127,7 @@ export const AddFurnitureModal = ({ onClose }: Props) => {
                 background: '#C8A458', color: '#1B1A17', cursor: 'pointer',
               }}
             >
-              追加
+              {isEdit ? '保存' : '追加'}
             </button>
           </div>
         </form>

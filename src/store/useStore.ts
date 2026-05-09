@@ -37,6 +37,7 @@ interface AppState {
   clearFloorPlan: () => void;
 
   addFurnitureDefinition: (def: Omit<FurnitureDefinition, 'id'>) => void;
+  updateFurnitureDefinition: (id: string, updates: Partial<Pick<FurnitureDefinition, 'name' | 'width' | 'height' | 'color'>>) => void;
   removeFurnitureDefinition: (id: string) => void;
 
   placeFurniture: (defId: string, x: number, y: number) => boolean;
@@ -102,6 +103,13 @@ export const useStore = create<AppState>()(
             ],
           };
         }),
+
+      updateFurnitureDefinition: (id, updates) =>
+        set((s) => ({
+          furnitureDefinitions: s.furnitureDefinitions.map((d) =>
+            d.id === id ? { ...d, ...updates } : d,
+          ),
+        })),
 
       removeFurnitureDefinition: (id) =>
         set((s) => ({

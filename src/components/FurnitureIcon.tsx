@@ -5,8 +5,8 @@ interface Props {
   size?: number;
 }
 
-// Top-down SVG icons for each preset furniture type
-const ICONS: Record<string, (c: string) => React.ReactNode> = {
+// Exported so PlacedFurniture can reuse the same shapes at arbitrary size
+export const ICON_RENDERERS: Record<string, (c: string) => React.ReactNode> = {
   'preset-single-bed': (c) => (
     <>
       <rect x="3" y="3" width="34" height="9" rx="1.5" fill={c} opacity="0.9" />
@@ -91,7 +91,7 @@ const ICONS: Record<string, (c: string) => React.ReactNode> = {
 };
 
 export const FurnitureIcon = ({ defId, name, color, size = 40 }: Props) => {
-  const iconFn = ICONS[defId];
+  const iconFn = ICON_RENDERERS[defId];
   const fallbackLetter = name[0] ?? '?';
 
   return (

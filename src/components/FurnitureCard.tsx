@@ -6,10 +6,11 @@ import { FurnitureIcon } from './FurnitureIcon';
 
 interface Props {
   def: FurnitureDefinition;
+  onEdit: () => void;
   onDelete: () => void;
 }
 
-export const FurnitureCard = ({ def, onDelete }: Props) => {
+export const FurnitureCard = ({ def, onEdit, onDelete }: Props) => {
   const { unit } = useStore();
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `palette-${def.id}`,
@@ -48,23 +49,41 @@ export const FurnitureCard = ({ def, onDelete }: Props) => {
           {displayValue(def.width, unit)} × {displayValue(def.height, unit)}
         </div>
       </div>
-      <button
+
+      {/* Action buttons — visible on hover */}
+      <div
+        style={{ display: 'flex', gap: 3, opacity: 0, transition: 'opacity 0.12s' }}
+        className="action-btns"
         onPointerDown={(e) => e.stopPropagation()}
-        onClick={(e) => { e.stopPropagation(); onDelete(); }}
-        style={{
-          width: 20, height: 20, borderRadius: '50%',
-          background: 'transparent', border: 'none',
-          color: '#4A4840', fontSize: 10,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', opacity: 0, transition: 'opacity 0.12s, color 0.12s',
-          flexShrink: 0,
-        }}
-        className="delete-btn"
-        title="削除"
       >
-        ✕
-      </button>
-      <style>{`.group:hover .delete-btn { opacity: 1 !important; } .delete-btn:hover { color: #EF4444 !important; }`}</style>
+        <button
+          onClick={(e) => { e.stopPropagation(); onEdit(); }}
+          style={{
+            width: 22, height: 22, borderRadius: 5,
+            background: '#35342F', border: 'none',
+            color: '#A0978A', fontSize: 11,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer',
+          }}
+          title="編集"
+        >
+          ✎
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}
+          style={{
+            width: 22, height: 22, borderRadius: 5,
+            background: '#35342F', border: 'none',
+            color: '#A0978A', fontSize: 10,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer',
+          }}
+          title="削除"
+        >
+          ✕
+        </button>
+      </div>
+      <style>{`.group:hover .action-btns { opacity: 1 !important; }`}</style>
     </div>
   );
 };

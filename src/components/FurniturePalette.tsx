@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { FurnitureCard } from './FurnitureCard';
 import { AddFurnitureModal } from './AddFurnitureModal';
+import type { FurnitureDefinition } from '../types';
 
 interface Props {
   onOpenFloorPlan: () => void;
@@ -10,6 +11,7 @@ interface Props {
 export const FurniturePalette = ({ onOpenFloorPlan }: Props) => {
   const { furnitureDefinitions, removeFurnitureDefinition, room } = useStore();
   const [showAdd, setShowAdd] = useState(false);
+  const [editTarget, setEditTarget] = useState<FurnitureDefinition | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const handleDeleteConfirm = () => {
@@ -63,6 +65,7 @@ export const FurniturePalette = ({ onOpenFloorPlan }: Props) => {
             <FurnitureCard
               key={def.id}
               def={def}
+              onEdit={() => setEditTarget(def)}
               onDelete={() => setDeleteConfirm(def.id)}
             />
           ))}
@@ -89,7 +92,16 @@ export const FurniturePalette = ({ onOpenFloorPlan }: Props) => {
         </button>
       </div>
 
+      {/* Add modal */}
       {showAdd && <AddFurnitureModal onClose={() => setShowAdd(false)} />}
+
+      {/* Edit modal */}
+      {editTarget && (
+        <AddFurnitureModal
+          onClose={() => setEditTarget(null)}
+          editTarget={editTarget}
+        />
+      )}
 
       {/* Delete confirmation */}
       {deleteConfirm && defToDelete && (

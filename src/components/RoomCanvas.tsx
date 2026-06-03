@@ -12,6 +12,56 @@ export interface RoomCanvasHandle {
   exportPng: () => void;
 }
 
+// ── Dimension line SVG helper ──────────────────────────────────────────────
+function DimLine({ x1, y1, x2, y2, label }: {
+  x1: number; y1: number; x2: number; y2: number; label: string;
+}) {
+  const isHoriz = Math.abs(x2 - x1) >= Math.abs(y2 - y1);
+  const midX = (x1 + x2) / 2;
+  const midY = (y1 + y2) / 2;
+  const dist = Math.hypot(x2 - x1, y2 - y1);
+  if (dist < 2) return null;
+
+  const tick = 5;
+  const showLabel = dist > 26;
+  // For vertical lines, offset label rightward to avoid overlapping the line
+  const lx = isHoriz ? midX : midX + 17;
+  const ly = midY;
+  const lw = label.length * 6 + 12;
+
+  return (
+    <g>
+      {/* Dashed measurement line */}
+      <line x1={x1} y1={y1} x2={x2} y2={y2}
+        stroke="rgba(200,164,88,0.55)" strokeWidth={1} strokeDasharray="3 2" />
+      {/* Tick marks at both ends */}
+      {isHoriz ? (
+        <>
+          <line x1={x1} y1={y1 - tick} x2={x1} y2={y1 + tick} stroke="#C8A458" strokeWidth={1.5} />
+          <line x1={x2} y1={y2 - tick} x2={x2} y2={y2 + tick} stroke="#C8A458" strokeWidth={1.5} />
+        </>
+      ) : (
+        <>
+          <line x1={x1 - tick} y1={y1} x2={x1 + tick} y2={y1} stroke="#C8A458" strokeWidth={1.5} />
+          <line x1={x2 - tick} y1={y2} x2={x2 + tick} y2={y2} stroke="#C8A458" strokeWidth={1.5} />
+        </>
+      )}
+      {/* Distance label */}
+      {showLabel && (
+        <>
+          <rect x={lx - lw / 2} y={ly - 9} width={lw} height={17} rx={3}
+            fill="#18171480" />
+          <text x={lx} y={ly + 4.5} textAnchor="middle"
+            fontSize={9.5} fontWeight="700" fill="#C8A458"
+            fontFamily="system-ui, -apple-system, sans-serif">
+            {label}
+          </text>
+        </>
+      )}
+    </g>
+  );
+}
+
 export const RoomCanvas = forwardRef<RoomCanvasHandle>((_, ref) => {
   const { room, furnitureDefinitions, placedFurniture, unit } = useStore();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -55,11 +105,9 @@ export const RoomCanvas = forwardRef<RoomCanvasHandle>((_, ref) => {
     if (!ctx) return;
     ctx.scale(dpr, dpr);
 
-    // Background
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, w, h);
 
-    // Grid
     ctx.strokeStyle = '#E5E7EB';
     ctx.lineWidth = 0.5;
     for (let x = 0; x <= room.width; x += GRID_CM) {
@@ -69,7 +117,6 @@ export const RoomCanvas = forwardRef<RoomCanvasHandle>((_, ref) => {
       ctx.beginPath(); ctx.moveTo(0, y * px); ctx.lineTo(w, y * px); ctx.stroke();
     }
 
-    // Room polygon / outside shading
     if (room.polygon && room.polygon.length >= 3) {
       ctx.save();
       ctx.fillStyle = 'rgba(0,0,0,0.08)';
@@ -84,7 +131,6 @@ export const RoomCanvas = forwardRef<RoomCanvasHandle>((_, ref) => {
       ctx.fill();
       ctx.restore();
 
-      // Polygon outline
       ctx.strokeStyle = '#3B82F6';
       ctx.lineWidth = 2;
       ctx.setLineDash([6, 3]);
@@ -98,7 +144,6 @@ export const RoomCanvas = forwardRef<RoomCanvasHandle>((_, ref) => {
       ctx.setLineDash([]);
     }
 
-    // Furniture
     placedFurniture.forEach((placed) => {
       const def = furnitureDefinitions.find((d) => d.id === placed.definitionId);
       if (!def) return;
@@ -144,17 +189,111 @@ export const RoomCanvas = forwardRef<RoomCanvasHandle>((_, ref) => {
   const canvasW = room.width * pxPerCm;
   const canvasH = room.height * pxPerCm;
 
-  // Grid lines
+  // ── Grid lines (slightly brightened for readability) ─────────────────────
   const gridLines: React.ReactNode[] = [];
   for (let x = 0; x <= room.width; x += GRID_CM) {
     gridLines.push(
-      <line key={`v${x}`} x1={x * pxPerCm} y1={0} x2={x * pxPerCm} y2={canvasH} stroke="#2A2924" strokeWidth={0.75} />
+      <line key={`v${x}`} x1={x * pxPerCm} y1={0} x2={x * pxPerCm} y2={canvasH}
+        stroke="#3C3830" strokeWidth={0.8} />
     );
   }
   for (let y = 0; y <= room.height; y += GRID_CM) {
     gridLines.push(
-      <line key={`h${y}`} x1={0} y1={y * pxPerCm} x2={canvasW} y2={y * pxPerCm} stroke="#2A2924" strokeWidth={0.75} />
+      <line key={`h${y}`} x1={0} y1={y * pxPerCm} x2={canvasW} y2={y * pxPerCm}
+        stroke="#3C3830" strokeWidth={0.8} />
     );
+  }
+
+  // ── Dimension overlay ────────────────────────────────────────────────────
+  const dimLines: React.ReactNode[] = [];
+  if (selected) {
+    const selPlaced = placedFurniture.find((p) => p.id === selected);
+    const selDef = selPlaced
+      ? furnitureDefinitions.find((d) => d.id === selPlaced.definitionId)
+      : null;
+
+    if (selPlaced && selDef) {
+      const selW = selPlaced.widthOverride ?? selDef.width;
+      const selH = selPlaced.heightOverride ?? selDef.height;
+      const selX = selPlaced.x;
+      const selY = selPlaced.y;
+      const selMidX = selX + selW / 2;
+      const selMidY = selY + selH / 2;
+
+      const leftPx   = selX * pxPerCm;
+      const topPx    = selY * pxPerCm;
+      const rightPx  = (selX + selW) * pxPerCm;
+      const bottomPx = (selY + selH) * pxPerCm;
+      const midXPx   = (leftPx + rightPx) / 2;
+      const midYPx   = (topPx + bottomPx) / 2;
+
+      type NearResult = { dist: number; edge: number } | null;
+
+      // Find the nearest furniture piece in a given cardinal direction
+      // that overlaps the selected piece's perpendicular midpoint
+      const getNearest = (dir: 'left' | 'right' | 'top' | 'bottom'): NearResult => {
+        let best: NearResult = null;
+        placedFurniture.forEach((p) => {
+          if (p.id === selected) return;
+          const d = furnitureDefinitions.find((fd) => fd.id === p.definitionId);
+          if (!d) return;
+          const pw = p.widthOverride ?? d.width;
+          const ph = p.heightOverride ?? d.height;
+          const pL = p.x, pT = p.y, pR = p.x + pw, pB = p.y + ph;
+
+          let candidate: { dist: number; edge: number } | null = null;
+          switch (dir) {
+            case 'right':
+              if (pT <= selMidY && pB >= selMidY && pL >= selX + selW)
+                candidate = { dist: pL - (selX + selW), edge: pL };
+              break;
+            case 'left':
+              if (pT <= selMidY && pB >= selMidY && pR <= selX)
+                candidate = { dist: selX - pR, edge: pR };
+              break;
+            case 'bottom':
+              if (pL <= selMidX && pR >= selMidX && pT >= selY + selH)
+                candidate = { dist: pT - (selY + selH), edge: pT };
+              break;
+            case 'top':
+              if (pL <= selMidX && pR >= selMidX && pB <= selY)
+                candidate = { dist: selY - pB, edge: pB };
+              break;
+          }
+          if (candidate && (!best || candidate.dist < best.dist)) best = candidate;
+        });
+        return best;
+      };
+
+      const push = (key: string, x1: number, y1: number, x2: number, y2: number, cm: number) => {
+        if (cm <= 0) return;
+        dimLines.push(
+          <DimLine key={key} x1={x1} y1={y1} x2={x2} y2={y2}
+            label={`${Math.round(cm)}cm`} />
+        );
+      };
+
+      const nr = getNearest('right');
+      const nl = getNearest('left');
+      const nb = getNearest('bottom');
+      const nt = getNearest('top');
+
+      // Right
+      if (nr) push('r', rightPx, midYPx, nr.edge * pxPerCm, midYPx, nr.dist);
+      else     push('r', rightPx, midYPx, canvasW, midYPx, room.width - (selX + selW));
+
+      // Left
+      if (nl) push('l', nl.edge * pxPerCm, midYPx, leftPx, midYPx, nl.dist);
+      else    push('l', 0, midYPx, leftPx, midYPx, selX);
+
+      // Bottom
+      if (nb) push('b', midXPx, bottomPx, midXPx, nb.edge * pxPerCm, nb.dist);
+      else    push('b', midXPx, bottomPx, midXPx, canvasH, room.height - (selY + selH));
+
+      // Top
+      if (nt) push('t', midXPx, nt.edge * pxPerCm, midXPx, topPx, nt.dist);
+      else    push('t', midXPx, 0, midXPx, topPx, selY);
+    }
   }
 
   const polygonPts = room.polygon
@@ -163,12 +302,10 @@ export const RoomCanvas = forwardRef<RoomCanvasHandle>((_, ref) => {
 
   const getImgStyle = (): React.CSSProperties => {
     if (!room.floorPlanImage || !room.imageCropW || !room.imageCropH) return { display: 'none' };
-    // Width and depth may have been entered independently, so scale x/y separately
     const sx = (room.width * pxPerCm) / room.imageCropW;
     const sy = (room.height * pxPerCm) / room.imageCropH;
     const cropX = room.imageCropX ?? 0;
     const cropY = room.imageCropY ?? 0;
-    // "scaleX(sx) scaleY(sy) translate(-cropX, -cropY)" applies translate in original px space, then scales
     return {
       position: 'absolute', top: 0, left: 0,
       transformOrigin: '0 0',
@@ -195,11 +332,12 @@ export const RoomCanvas = forwardRef<RoomCanvasHandle>((_, ref) => {
             width: canvasW,
             height: canvasH,
             position: 'relative',
-            background: '#1E1D1A',
+            // Slightly lighter canvas floor for contrast
+            background: '#26231F',
             boxShadow: isOver
               ? '0 0 0 2px #C8A458, 0 0 40px rgba(200,164,88,0.15)'
-              : '0 0 0 1px #35342F, 0 8px 40px rgba(0,0,0,0.5)',
-            overflow: 'hidden',
+              : '0 0 0 1px #3A3630, 0 8px 40px rgba(0,0,0,0.5)',
+            overflow: 'visible',
             flexShrink: 0,
           }}
         >
@@ -210,7 +348,7 @@ export const RoomCanvas = forwardRef<RoomCanvasHandle>((_, ref) => {
 
           {/* SVG layer: outside shading + grid */}
           <svg
-            style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1 }}
+            style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1, overflow: 'visible' }}
             width={canvasW} height={canvasH}
           >
             {room.polygon && (
@@ -250,6 +388,16 @@ export const RoomCanvas = forwardRef<RoomCanvasHandle>((_, ref) => {
             );
           })}
 
+          {/* Dimension overlay (above furniture, below polygon outline) */}
+          {dimLines.length > 0 && (
+            <svg
+              style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 15, overflow: 'visible' }}
+              width={canvasW} height={canvasH}
+            >
+              {dimLines}
+            </svg>
+          )}
+
           {/* Top SVG: polygon outline */}
           {room.polygon && (
             <svg
@@ -262,7 +410,7 @@ export const RoomCanvas = forwardRef<RoomCanvasHandle>((_, ref) => {
           )}
         </div>
 
-        {/* Label */}
+        {/* Room size label */}
         <div style={{ marginTop: 10, fontSize: 11, color: '#4A4840', userSelect: 'none' }}>
           {displayValue(room.width, unit)} × {displayValue(room.height, unit)}
           {room.polygon && ' (間取り図モード)'}

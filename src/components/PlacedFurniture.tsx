@@ -23,6 +23,8 @@ export const PlacedFurniture = ({ placed, def, pxPerCm, selected, onClick, inval
   const rotation = placed.rotation ?? 0;
   const effectiveW = placed.widthOverride ?? def.width;
   const effectiveH = placed.heightOverride ?? def.height;
+  // Flip control bar below the furniture when it's near the top of the canvas
+  const showControlsBelow = placed.y * pxPerCm < 64;
   const pxW = effectiveW * pxPerCm;
   const pxH = effectiveH * pxPerCm;
   const iconFn = ICON_RENDERERS[def.id];
@@ -80,10 +82,11 @@ export const PlacedFurniture = ({ placed, def, pxPerCm, selected, onClick, inval
         <div
           style={{
             position: 'absolute',
-            bottom: '100%',
+            ...(showControlsBelow
+              ? { top: '100%', marginTop: 6 }
+              : { bottom: '100%', marginBottom: 6 }),
             left: '50%',
             transform: 'translateX(-50%)',
-            marginBottom: 6,
             display: 'flex',
             alignItems: 'center',
             gap: 6,

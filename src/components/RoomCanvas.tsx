@@ -102,23 +102,30 @@ export const RoomCanvas = forwardRef<RoomCanvasHandle>((_, ref) => {
     placedFurniture.forEach((placed) => {
       const def = furnitureDefinitions.find((d) => d.id === placed.definitionId);
       if (!def) return;
-      const fw = (placed.rotated ? def.height : def.width) * px;
-      const fh = (placed.rotated ? def.width : def.height) * px;
+      const fw = (placed.widthOverride ?? def.width) * px;
+      const fh = (placed.heightOverride ?? def.height) * px;
+      const cx = placed.x * px + fw / 2;
+      const cy = placed.y * px + fh / 2;
+      const angle = ((placed.rotation ?? 0) * Math.PI) / 180;
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(angle);
       ctx.fillStyle = def.color;
       ctx.strokeStyle = 'rgba(0,0,0,0.15)';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.roundRect(placed.x * px, placed.y * px, fw, fh, 3);
+      ctx.roundRect(-fw / 2, -fh / 2, fw, fh, 3);
       ctx.fill();
       ctx.stroke();
 
-      // Label
       const fontSize = Math.max(8, Math.min(13, fw / 6));
       ctx.fillStyle = '#374151';
       ctx.font = `500 ${fontSize}px system-ui`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(def.name, placed.x * px + fw / 2, placed.y * px + fh / 2, fw - 8);
+      ctx.fillText(def.name, 0, 0, fw - 8);
+      ctx.restore();
     });
 
     const url = canvas.toDataURL('image/png');

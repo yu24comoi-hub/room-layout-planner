@@ -8,9 +8,8 @@ export interface Point {
 export interface Room {
   width: number;  // cm
   height: number; // cm
-  polygon?: Point[];        // polygon vertices in cm (relative to room top-left)
-  floorPlanImage?: string;  // base64 data URL
-  // crop region in original image pixels (bounding box of the traced polygon)
+  polygon?: Point[];
+  floorPlanImage?: string;
   imageCropX?: number;
   imageCropY?: number;
   imageCropW?: number;
@@ -29,7 +28,9 @@ export interface FurnitureDefinition {
 export interface PlacedFurniture {
   id: string;
   definitionId: string;
-  x: number;        // cm from room top-left
-  y: number;        // cm from room top-left
-  rotated: boolean; // true = 90° rotation (swap width/height)
+  x: number;        // cm — top-left of unrotated bounding box
+  y: number;
+  rotation: number; // degrees, 0–360 (clockwise)
+  widthOverride?: number;  // cm, overrides definition width for this instance
+  heightOverride?: number; // cm, overrides definition height for this instance
 }

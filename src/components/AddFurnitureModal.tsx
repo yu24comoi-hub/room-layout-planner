@@ -9,9 +9,9 @@ interface Props {
 }
 
 const COLORS = [
-  '#93c5fd', '#86efac', '#fcd34d', '#f9a8d4',
-  '#a5b4fc', '#6ee7b7', '#fda4af', '#bfdbfe',
-  '#d9f99d', '#fed7aa', '#c4b5fd', '#f0abfc',
+  '#C8B89A', '#BCA98A', '#8E9DB5', '#7A8FA8',
+  '#A8896C', '#C2A87A', '#9A8878', '#9A8570',
+  '#5A5A5E', '#B8BEC4', '#A8ADB8', '#8A8E96',
 ];
 
 export const AddFurnitureModal = ({ onClose, editTarget }: Props) => {

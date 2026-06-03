@@ -20,7 +20,7 @@ import type { FurnitureDefinition } from './types';
 interface ActiveDrag {
   type: 'palette' | 'placed';
   def: FurnitureDefinition;
-  rotated?: boolean;
+  rotation?: number;
 }
 
 export default function App() {
@@ -43,7 +43,7 @@ export default function App() {
       const placed = placedFurniture.find((p) => p.id === event.active.id);
       if (placed) {
         const def = furnitureDefinitions.find((d) => d.id === placed.definitionId);
-        if (def) setActiveDrag({ type: 'placed', def, rotated: placed.rotated });
+        if (def) setActiveDrag({ type: 'placed', def, rotation: placed.rotation ?? 0 });
       }
     }
   }, [furnitureDefinitions, placedFurniture]);
@@ -83,12 +83,9 @@ export default function App() {
   }, [furnitureDefinitions, placedFurniture, placeFurniture, moveFurniture]);
 
   const pxPerCmNow = canvasRef.current?.getPxPerCm() ?? 2;
-  const overlayW = activeDrag
-    ? (activeDrag.rotated ? activeDrag.def.height : activeDrag.def.width) * pxPerCmNow
-    : 0;
-  const overlayH = activeDrag
-    ? (activeDrag.rotated ? activeDrag.def.width : activeDrag.def.height) * pxPerCmNow
-    : 0;
+  const overlayW = activeDrag ? activeDrag.def.width * pxPerCmNow : 0;
+  const overlayH = activeDrag ? activeDrag.def.height * pxPerCmNow : 0;
+  const overlayRotation = activeDrag?.rotation ?? 0;
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -127,6 +124,7 @@ export default function App() {
             borderRadius: 4,
             border: '1.5px solid rgba(0,0,0,0.2)',
             opacity: 0.85,
+            transform: overlayRotation ? `rotate(${overlayRotation}deg)` : undefined,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 11, fontWeight: 600, color: 'rgba(0,0,0,0.55)',
             pointerEvents: 'none',

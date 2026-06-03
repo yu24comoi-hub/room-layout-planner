@@ -23,7 +23,7 @@ export const Header = ({ onUndo, onDownload, canUndo }: Props) => {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <span style={{ fontSize: 20 }}>🏠</span>
         <h1 style={{ fontSize: 15, fontWeight: 600, color: '#E0D9CA', margin: 0, letterSpacing: '-0.01em' }}>
-          部屋のレイアウトプランナー
+          インテリアプランナー
         </h1>
       </div>
 

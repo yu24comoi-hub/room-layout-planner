@@ -6,22 +6,22 @@ import { isValidPlacement } from '../utils/geometry';
 import { snapToGrid } from '../utils/scale';
 
 const PRESET_COLORS = [
-  '#93c5fd', '#86efac', '#fcd34d', '#f9a8d4',
-  '#a5b4fc', '#6ee7b7', '#fda4af', '#bfdbfe',
-  '#d9f99d', '#fed7aa',
+  '#C8B89A', '#8E9DB5', '#A8896C', '#9A8878',
+  '#C2A87A', '#9A8570', '#5A5A5E', '#B8BEC4',
+  '#A8ADB8', '#BCA98A',
 ];
 
 const PRESETS: FurnitureDefinition[] = [
-  { id: 'preset-single-bed', name: 'シングルベッド', width: 100, height: 200, color: '#93c5fd', isPreset: true },
-  { id: 'preset-double-bed', name: 'ダブルベッド', width: 140, height: 200, color: '#bfdbfe', isPreset: true },
-  { id: 'preset-sofa', name: 'ソファ（2人掛け）', width: 150, height: 80, color: '#86efac', isPreset: true },
-  { id: 'preset-dining-table', name: 'ダイニングテーブル', width: 120, height: 80, color: '#fcd34d', isPreset: true },
-  { id: 'preset-chair', name: '椅子', width: 45, height: 45, color: '#f9a8d4', isPreset: true },
-  { id: 'preset-desk', name: 'デスク', width: 120, height: 60, color: '#a5b4fc', isPreset: true },
-  { id: 'preset-wardrobe', name: 'ワードローブ', width: 90, height: 180, color: '#6ee7b7', isPreset: true },
-  { id: 'preset-tv-stand', name: 'テレビ台', width: 120, height: 45, color: '#fda4af', isPreset: true },
-  { id: 'preset-fridge', name: '冷蔵庫', width: 65, height: 65, color: '#d9f99d', isPreset: true },
-  { id: 'preset-washer', name: '洗濯機', width: 60, height: 60, color: '#fed7aa', isPreset: true },
+  { id: 'preset-single-bed', name: 'シングルベッド', width: 100, height: 200, color: '#C8B89A', isPreset: true },
+  { id: 'preset-double-bed', name: 'ダブルベッド', width: 140, height: 200, color: '#BCA98A', isPreset: true },
+  { id: 'preset-sofa', name: 'ソファ（2人掛け）', width: 150, height: 80, color: '#8E9DB5', isPreset: true },
+  { id: 'preset-dining-table', name: 'ダイニングテーブル', width: 120, height: 80, color: '#A8896C', isPreset: true },
+  { id: 'preset-chair', name: '椅子', width: 45, height: 45, color: '#9A8878', isPreset: true },
+  { id: 'preset-desk', name: 'デスク', width: 120, height: 60, color: '#C2A87A', isPreset: true },
+  { id: 'preset-wardrobe', name: 'ワードローブ', width: 90, height: 180, color: '#9A8570', isPreset: true },
+  { id: 'preset-tv-stand', name: 'テレビ台', width: 120, height: 45, color: '#5A5A5E', isPreset: true },
+  { id: 'preset-fridge', name: '冷蔵庫', width: 65, height: 65, color: '#B8BEC4', isPreset: true },
+  { id: 'preset-washer', name: '洗濯機', width: 60, height: 60, color: '#A8ADB8', isPreset: true },
 ];
 
 interface AppState {
@@ -42,7 +42,8 @@ interface AppState {
 
   placeFurniture: (defId: string, x: number, y: number) => boolean;
   moveFurniture: (id: string, x: number, y: number) => boolean;
-  rotateFurniture: (id: string) => void;
+  setFurnitureRotation: (id: string, degrees: number) => void;
+  setFurnitureSize: (id: string, w: number, h: number) => void;
   removePlacedFurniture: (id: string) => void;
   clearPlacedFurniture: () => void;
   undo: () => void;
@@ -122,7 +123,7 @@ export const useStore = create<AppState>()(
         const def = furnitureDefinitions.find((d) => d.id === defId);
         if (!def) return false;
         const snapped = { x: snapToGrid(x), y: snapToGrid(y) };
-        const candidate: PlacedFurniture = { id: uuidv4(), definitionId: defId, x: snapped.x, y: snapped.y, rotated: false };
+        const candidate: PlacedFurniture = { id: uuidv4(), definitionId: defId, x: snapped.x, y: snapped.y, rotation: 0 };
         if (!isValidPlacement(candidate, def, room.width, room.height, room.polygon, placedFurniture, furnitureDefinitions)) {
           return false;
         }
@@ -139,9 +140,14 @@ export const useStore = create<AppState>()(
         if (!placed) return false;
         const def = furnitureDefinitions.find((d) => d.id === placed.definitionId);
         if (!def) return false;
+        const effectiveDef = {
+          ...def,
+          width: placed.widthOverride ?? def.width,
+          height: placed.heightOverride ?? def.height,
+        };
         const snapped = { x: snapToGrid(x), y: snapToGrid(y) };
         const candidate: PlacedFurniture = { ...placed, x: snapped.x, y: snapped.y };
-        if (!isValidPlacement(candidate, def, room.width, room.height, room.polygon, placedFurniture, furnitureDefinitions)) {
+        if (!isValidPlacement(candidate, effectiveDef, room.width, room.height, room.polygon, placedFurniture, furnitureDefinitions)) {
           return false;
         }
         set(() => ({
@@ -151,18 +157,22 @@ export const useStore = create<AppState>()(
         return true;
       },
 
-      rotateFurniture: (id) => {
-        const { room, furnitureDefinitions, placedFurniture, _pfHistory } = get();
-        const placed = placedFurniture.find((p) => p.id === id);
-        if (!placed) return;
-        const def = furnitureDefinitions.find((d) => d.id === placed.definitionId);
-        if (!def) return;
-        const candidate: PlacedFurniture = { ...placed, rotated: !placed.rotated };
-        if (!isValidPlacement(candidate, def, room.width, room.height, room.polygon, placedFurniture, furnitureDefinitions)) {
-          return;
-        }
+      setFurnitureRotation: (id, degrees) => {
+        const { placedFurniture, _pfHistory } = get();
         set(() => ({
-          placedFurniture: placedFurniture.map((p) => p.id === id ? { ...p, rotated: !p.rotated } : p),
+          placedFurniture: placedFurniture.map((p) =>
+            p.id === id ? { ...p, rotation: ((degrees % 360) + 360) % 360 } : p,
+          ),
+          _pfHistory: pushHistory(placedFurniture, _pfHistory),
+        }));
+      },
+
+      setFurnitureSize: (id, w, h) => {
+        const { placedFurniture, _pfHistory } = get();
+        set(() => ({
+          placedFurniture: placedFurniture.map((p) =>
+            p.id === id ? { ...p, widthOverride: w, heightOverride: h } : p,
+          ),
           _pfHistory: pushHistory(placedFurniture, _pfHistory),
         }));
       },
@@ -191,6 +201,39 @@ export const useStore = create<AppState>()(
     }),
     {
       name: 'room-layout-planner',
+      version: 2,
+      migrate: (raw: unknown, fromVersion: number) => {
+        let s = raw as Record<string, unknown>;
+        if (fromVersion === 0) {
+          s = {
+            ...s,
+            placedFurniture: ((s.placedFurniture as Array<Record<string, unknown>>) ?? []).map((p) => ({
+              ...p,
+              rotation: p.rotated ? 90 : 0,
+              rotated: undefined,
+            })),
+          };
+        }
+        if (fromVersion <= 1) {
+          // Update preset furniture colors to new natural palette
+          const colorMap: Record<string, string> = {
+            'preset-single-bed': '#C8B89A', 'preset-double-bed': '#BCA98A',
+            'preset-sofa': '#8E9DB5', 'preset-dining-table': '#A8896C',
+            'preset-chair': '#9A8878', 'preset-desk': '#C2A87A',
+            'preset-wardrobe': '#9A8570', 'preset-tv-stand': '#5A5A5E',
+            'preset-fridge': '#B8BEC4', 'preset-washer': '#A8ADB8',
+          };
+          s = {
+            ...s,
+            furnitureDefinitions: ((s.furnitureDefinitions as Array<Record<string, unknown>>) ?? []).map((d) =>
+              d.isPreset && colorMap[d.id as string]
+                ? { ...d, color: colorMap[d.id as string] }
+                : d,
+            ),
+          };
+        }
+        return s;
+      },
       partialize: (state) => ({
         unit: state.unit,
         room: state.room,

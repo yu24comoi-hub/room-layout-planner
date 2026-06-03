@@ -1,7 +1,5 @@
 import { useDraggable } from '@dnd-kit/core';
 import type { FurnitureDefinition } from '../types';
-import { useStore } from '../store/useStore';
-import { displayValue } from '../utils/scale';
 import { FurnitureIcon } from './FurnitureIcon';
 
 interface Props {
@@ -11,7 +9,6 @@ interface Props {
 }
 
 export const FurnitureCard = ({ def, onEdit, onDelete }: Props) => {
-  const { unit } = useStore();
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `palette-${def.id}`,
     data: { type: 'palette', defId: def.id },
@@ -44,9 +41,6 @@ export const FurnitureCard = ({ def, onEdit, onDelete }: Props) => {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 12, fontWeight: 500, color: '#E0D9CA', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {def.name}
-        </div>
-        <div style={{ fontSize: 11, color: '#7A7468', marginTop: 1 }}>
-          {displayValue(def.width, unit)} × {displayValue(def.height, unit)}
         </div>
       </div>
 

@@ -88,7 +88,7 @@ export const FurniturePalette = ({ onOpenFloorPlan }: Props) => {
           onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#9A8760'; }}
         >
           <span style={{ fontSize: 14 }}>+</span>
-          Add custom furniture
+          家具を追加する
         </button>
       </div>
 

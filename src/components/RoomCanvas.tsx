@@ -332,11 +332,11 @@ export const RoomCanvas = forwardRef<RoomCanvasHandle>((_, ref) => {
             width: canvasW,
             height: canvasH,
             position: 'relative',
-            // Slightly lighter canvas floor for contrast
-            background: '#26231F',
+            // Canvas floor: noticeably lighter than the surrounding #1B1A17
+            background: '#3C3830',
             boxShadow: isOver
               ? '0 0 0 2px #C8A458, 0 0 40px rgba(200,164,88,0.15)'
-              : '0 0 0 1px #3A3630, 0 8px 40px rgba(0,0,0,0.5)',
+              : '0 0 0 1px #4A4540, 0 8px 48px rgba(0,0,0,0.55)',
             overflow: 'visible',
             flexShrink: 0,
           }}

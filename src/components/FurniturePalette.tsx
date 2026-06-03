@@ -28,7 +28,8 @@ export const FurniturePalette = ({ onOpenFloorPlan }: Props) => {
       {/* Section header */}
       <div style={{ padding: '14px 16px 0' }}>
         <h2 style={{
-          fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
+          fontSize: 10, fontWeight: 600, letterSpacing: '0.14em',
+          fontFamily: "'Jost', system-ui, sans-serif",
           color: '#9A8760', textTransform: 'uppercase', margin: '0 0 10px',
         }}>
           Furniture Library

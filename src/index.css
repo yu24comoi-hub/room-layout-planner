@@ -7,8 +7,11 @@
 body {
   margin: 0;
   background: #1B1A17;
-  font-family: system-ui, -apple-system, sans-serif;
+  /* Jost for Latin/numbers, Noto Serif JP for Japanese — premium combination */
+  font-family: 'Jost', 'Noto Serif JP', system-ui, sans-serif;
   color: #E0D9CA;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {

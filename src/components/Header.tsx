@@ -20,10 +20,22 @@ export const Header = ({ onUndo, onDownload, canUndo }: Props) => {
       justifyContent: 'space-between',
       flexShrink: 0,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ fontSize: 20 }}>🏠</span>
-        <h1 style={{ fontSize: 15, fontWeight: 600, color: '#E0D9CA', margin: 0, letterSpacing: '-0.01em' }}>
-          インテリアプランナー
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        {/* Thin gold rule as a logo mark */}
+        <span style={{
+          display: 'inline-block', width: 3, height: 22,
+          background: 'linear-gradient(180deg, #C8A458 0%, #A8843A 100%)',
+          borderRadius: 2, flexShrink: 0,
+        }} />
+        <h1 style={{
+          fontSize: 17,
+          fontWeight: 500,
+          fontFamily: "'Cormorant Garamond', 'Noto Serif JP', Georgia, serif",
+          letterSpacing: '0.06em',
+          color: '#E0D9CA',
+          margin: 0,
+        }}>
+          Interior Planner
         </h1>
       </div>
 

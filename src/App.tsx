@@ -15,6 +15,7 @@ import { RoomCanvas } from './components/RoomCanvas';
 import type { RoomCanvasHandle } from './components/RoomCanvas';
 import { FloorPlanSetupModal } from './components/FloorPlanSetup/FloorPlanSetupModal';
 import { snapToGrid } from './utils/scale';
+import { useIsMobile } from './hooks/useIsMobile';
 import type { FurnitureDefinition } from './types';
 
 interface ActiveDrag {
@@ -28,6 +29,8 @@ export default function App() {
   const canvasRef = useRef<RoomCanvasHandle>(null);
   const [activeDrag, setActiveDrag] = useState<ActiveDrag | null>(null);
   const [showFloorPlan, setShowFloorPlan] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -87,6 +90,33 @@ export default function App() {
   const overlayH = activeDrag ? activeDrag.def.height * pxPerCmNow : 0;
   const overlayRotation = activeDrag?.rotation ?? 0;
 
+  const sidebarStyle: React.CSSProperties = isMobile
+    ? {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        height: '100dvh',
+        width: 280,
+        zIndex: 50,
+        transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+        transition: 'transform 0.26s cubic-bezier(0.4, 0, 0.2, 1)',
+        boxShadow: sidebarOpen ? '6px 0 40px rgba(0,0,0,0.7)' : 'none',
+        background: '#1F1E1B',
+        borderRight: '1px solid #35342F',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }
+    : {
+        width: 260,
+        flexShrink: 0,
+        background: '#1F1E1B',
+        borderRight: '1px solid #35342F',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      };
+
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', overflow: 'hidden' }}>
@@ -94,22 +124,34 @@ export default function App() {
           onUndo={undo}
           onDownload={() => canvasRef.current?.exportPng()}
           canUndo={_pfHistory.length > 0}
+          onMenuToggle={() => setSidebarOpen((v) => !v)}
+          menuOpen={sidebarOpen}
+          isMobile={isMobile}
         />
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-          {/* Left sidebar */}
-          <aside style={{
-            width: 260, flexShrink: 0,
-            background: '#1F1E1B',
-            borderRight: '1px solid #35342F',
-            display: 'flex', flexDirection: 'column', overflow: 'hidden',
-          }}>
+
+        <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
+          {/* Mobile backdrop */}
+          {isMobile && sidebarOpen && (
+            <div
+              onClick={() => setSidebarOpen(false)}
+              style={{
+                position: 'fixed', inset: 0, zIndex: 40,
+                background: 'rgba(0,0,0,0.55)',
+                backdropFilter: 'blur(2px)',
+                WebkitBackdropFilter: 'blur(2px)',
+              }}
+            />
+          )}
+
+          {/* Sidebar */}
+          <aside style={sidebarStyle}>
             <RoomConfig />
-            <FurniturePalette onOpenFloorPlan={() => setShowFloorPlan(true)} />
+            <FurniturePalette onOpenFloorPlan={() => { setShowFloorPlan(true); setSidebarOpen(false); }} />
           </aside>
 
           {/* Main canvas */}
           <main style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
-            <RoomCanvas ref={canvasRef} />
+            <RoomCanvas ref={canvasRef} isMobile={isMobile} />
           </main>
         </div>
       </div>

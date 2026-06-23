@@ -62,7 +62,7 @@ function DimLine({ x1, y1, x2, y2, label }: {
   );
 }
 
-export const RoomCanvas = forwardRef<RoomCanvasHandle>((_, ref) => {
+export const RoomCanvas = forwardRef<RoomCanvasHandle, { isMobile?: boolean }>(({ isMobile }, ref) => {
   const { room, furnitureDefinitions, placedFurniture, unit } = useStore();
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasElRef = useRef<HTMLDivElement>(null);
@@ -321,7 +321,7 @@ export const RoomCanvas = forwardRef<RoomCanvasHandle>((_, ref) => {
       ref={containerRef}
       style={{
         flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        overflow: 'auto', background: '#1B1A17', padding: 32,
+        overflow: 'auto', background: '#1B1A17', padding: isMobile ? 12 : 32,
       }}
       onClick={() => setSelected(null)}
     >

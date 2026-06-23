@@ -3,6 +3,7 @@ import { useDraggable } from '@dnd-kit/core';
 import type { PlacedFurniture as PlacedFurnitureType, FurnitureDefinition } from '../types';
 import { useStore } from '../store/useStore';
 import { ICON_RENDERERS } from './FurnitureIcon';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 interface Props {
   placed: PlacedFurnitureType;
@@ -15,6 +16,7 @@ interface Props {
 
 export const PlacedFurniture = ({ placed, def, pxPerCm, selected, onClick, invalid }: Props) => {
   const { setFurnitureRotation, setFurnitureSize, removePlacedFurniture } = useStore();
+  const isMobile = useIsMobile();
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: placed.id,
     data: { type: 'placed' },
@@ -141,7 +143,7 @@ export const PlacedFurniture = ({ placed, def, pxPerCm, selected, onClick, inval
             max={359}
             value={rotation}
             onChange={(e) => setFurnitureRotation(placed.id, Number(e.target.value))}
-            style={{ width: 80, accentColor: '#C8A458', verticalAlign: 'middle' }}
+            style={{ width: isMobile ? 56 : 80, accentColor: '#C8A458', verticalAlign: 'middle' }}
           />
           <button
             onClick={(e) => {

@@ -1,36 +1,67 @@
 export type Unit = 'cm' | 'm';
 
 export interface Point {
-  x: number; // cm
-  y: number; // cm
-}
-
-export interface Room {
-  width: number;  // cm
-  height: number; // cm
-  polygon?: Point[];
-  floorPlanImage?: string;
-  imageCropX?: number;
-  imageCropY?: number;
-  imageCropW?: number;
-  imageCropH?: number;
+  x: number;
+  y: number;
 }
 
 export interface FurnitureDefinition {
   id: string;
   name: string;
-  width: number;  // cm
-  height: number; // cm
-  color: string;
-  isPreset: boolean;
+  defaultWidth: number;  // cm
+  defaultHeight: number; // cm
+  iconType:
+    | 'single_bed'
+    | 'double_bed'
+    | 'sofa'
+    | 'dining_table'
+    | 'chair'
+    | 'desk'
+    | 'wardrobe'
+    | 'tv_stand'
+    | 'refrigerator'
+    | 'washing_machine'
+    | 'custom';
+  isCustom?: boolean;
 }
 
 export interface PlacedFurniture {
   id: string;
-  definitionId: string;
-  x: number;        // cm — top-left of unrotated bounding box
-  y: number;
-  rotation: number; // degrees, 0–360 (clockwise)
-  widthOverride?: number;  // cm, overrides definition width for this instance
-  heightOverride?: number; // cm, overrides definition height for this instance
+  defId: string;
+  name: string;
+  width: number;    // cm (per-instance)
+  height: number;   // cm (per-instance)
+  x: number;        // CENTER x in cm
+  y: number;        // CENTER y in cm
+  rotation: number; // degrees 0-359
+  color: string;
+}
+
+export interface FloorplanSettings {
+  image: string | null;
+  scalePoints: { x: number; y: number }[];
+  scaleCm: number | null;
+  pxPerCm: number | null;
+  polygon: Point[];
+  polygonEnabled: boolean;
+}
+
+export interface RoomConfig {
+  width: number;  // cm
+  height: number; // cm
+}
+
+export interface AppState {
+  unit: Unit;
+  room: RoomConfig;
+  furnitureDefinitions: FurnitureDefinition[];
+  placedFurniture: PlacedFurniture[];
+  floorplan: FloorplanSettings;
+}
+
+export interface HistoryState {
+  unit: Unit;
+  room: RoomConfig;
+  placedFurniture: PlacedFurniture[];
+  floorplan: FloorplanSettings;
 }
